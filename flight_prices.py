@@ -10,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 
 def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
@@ -95,7 +96,12 @@ def fetch_prices(driver, fridays,currency_mask="€"):
         done_button.click()
         time.sleep(0.5)
         # if there are no li - i.e. no flights for the times and filters, the WebDriverWait will throw an exception. TODO: wrap into according except.
-        li_children = WebDriverWait(driver,3).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
+        try:
+            li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
+        except TimeoutException:
+            prices[fr] = None
+            continue
+
         if len(li_children):
             all_prices = []
             for i in li_children:
@@ -129,7 +135,7 @@ def main(initiary,months,debug):
     driver.find_element(By.XPATH, "/html/body/c-wiz/div/div/div/div[2]/div[1]/div[3]/div[1]/div[1]/form[2]/div/div/button").click()
 
     try:
-        navigate_to_main_search_mask(driver)
+        navigate_to_main_search_mask(driver,departure=departure,destination=destination)
     except:
         logging.error("Encountered Error while navigating to main search mask.")
         raise
