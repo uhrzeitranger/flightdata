@@ -83,10 +83,10 @@ def fetch_prices(driver, fridays,currency_mask="€"):
         logging.debug(f"Getting prices for {fr}")
         from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
         from_time.click()
-        time.sleep(0.2)
+        time.sleep(2)
         from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: This is throwing ElementNotInteractibleExpception
-        time.sleep(0.5)
+        from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+        time.sleep(1)
         to_time = driver.switch_to.active_element
         to_time.send_keys(su)
         time.sleep(1)
