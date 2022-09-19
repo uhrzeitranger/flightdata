@@ -78,18 +78,19 @@ def get_fridays(start_date = datetime.date.today(),months=6):
 def fetch_prices(driver, fridays,currency_mask="€"):
     # TODO: write this as a method of a class
     prices = {}
-    logging.info("Iterating:")
+    logging.info("Getting prices:")
     for fr, su in tqdm(fridays):
         logging.debug(f"Getting prices for {fr}")
+        time.sleep(1)
         from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
         from_time.click()
-        time.sleep(2)
+        time.sleep(1)
         from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
         from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
-        time.sleep(1)
+        time.sleep(0.5)
         to_time = driver.switch_to.active_element
         to_time.send_keys(su)
-        time.sleep(1)
+        time.sleep(0.5)
         done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
         done_button.click()
         time.sleep(0.5)
@@ -102,7 +103,7 @@ def fetch_prices(driver, fridays,currency_mask="€"):
                 price = re.search(rf'.*?{currency_mask}(.*?)\n.*', i.text).group(1)
                 all_prices.append(int(price))
             prices[fr] = min(all_prices)
-        logging.info("Prices fetched successfully.")
+    logging.info("Prices fetched successfully.")
     return prices
 
 @click.command()
@@ -148,7 +149,9 @@ def main(initiary,months,debug):
         raise
     
     # print to terminal or return?
-    pprint(prices, width=30)
+    pprint(prices, width=30, sort_dicts=False)
+
+    driver.close()
 
 
 
