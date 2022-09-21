@@ -21,7 +21,7 @@ def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     time.sleep(0.5)
     input_w_dropdown_from.clear()
     input_w_dropdown_from.send_keys(departure)
-    time.sleep(0.5) # load js
+    time.sleep(0.8) # load js
     input_w_dropdown_from.send_keys(Keys.RETURN)
 
     # entering destination
@@ -29,7 +29,7 @@ def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     input_to.click()
     input_w_dropdown_to = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[6]/div[2]/div[2]/div[1]/div/input")))
     input_w_dropdown_to.send_keys(destination)
-    time.sleep(0.5) # load js
+    time.sleep(0.8) # load js
     input_w_dropdown_to.send_keys(Keys.RETURN)
 
     # press search
