@@ -106,7 +106,7 @@ def fetch_prices(driver, fridays,currency_mask="€"):
             fr_prices = []
             for li in li_children:
                 try:
-                    price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1)
+                    price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
                     fr_prices.append(int(price))
                 except:
                     continue
