@@ -105,9 +105,11 @@ def fetch_prices(driver, fridays,currency_mask="€"):
         if len(li_children):
             all_prices = []
             for i in li_children:
-                # NOTE: This is for CHF - adjust for different settings, with more sophisticated reg ex matching
-                price = re.search(rf'.*?{currency_mask}(.*?)\n.*', i.text).group(1)
-                all_prices.append(int(price))
+                try:
+                    price = int(re.search(rf'.*?{currency_mask}(.*?)\n.*', i.text).group(1))
+                except:
+                    continue
+                all_prices.append(price)
             prices[fr] = min(all_prices)
     logging.info("Prices fetched successfully.")
     return prices
