@@ -103,14 +103,16 @@ def fetch_prices(driver, fridays,currency_mask="€"):
             continue
 
         if len(li_children):
-            all_prices = []
-            for i in li_children:
+            fr_prices = []
+            for li in li_children:
                 try:
-                    price = int(re.search(rf'.*?{currency_mask}(.*?)\n.*', i.text).group(1))
+                    price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1)
+                    fr_prices.append(int(price))
                 except:
                     continue
-                all_prices.append(price)
-            prices[fr] = min(all_prices)
+            prices[fr] = min(fr_prices)
+        else:
+            prices[fr] = None
     logging.info("Prices fetched successfully.")
     return prices
 
