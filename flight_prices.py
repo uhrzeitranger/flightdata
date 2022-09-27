@@ -36,7 +36,7 @@ def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[2]/div/button").click()
 
 
-def set_filters(driver):
+def set_filters(driver, time_out, time_in):
     # stops
     WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[1]/span/button"))).click()
     non_stop_option = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[2]/div/input")))
@@ -48,7 +48,7 @@ def set_filters(driver):
     driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button").click()
     # departure time
     outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
-    for _ in range(16):
+    for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set outbund time")
     time.sleep(1)
@@ -58,25 +58,34 @@ def set_filters(driver):
     driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[1]/div/div/span/button[2]").click()
     # departure time
     inbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[3]/span/div/div[2]/div/div[2]/div/div/input[1]")
-    for _ in range(17):
+    for _ in range(time_in):
         inbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set inbound time")
     time.sleep(1)
     inbound_dep_time_drag.send_keys(Keys.ESCAPE)
 
 
-def get_fridays(start_date = datetime.date.today(),months=6):
-    friday = start_date + datetime.timedelta( (4-start_date.weekday()) % 7 )
+def get_flight_dates(day_out,day_in,months=6):
+    days = ["Mo","Tu","We","Th","Fr","Sa","Su"]
+    nrs = [0,1,2,3,4,5,6]
+    day_nrs = dict(zip(days,nrs))
+    day_date = datetime.date.today() + datetime.timedelta( (day_nrs[day_out]-datetime.date.today().weekday()) % 7 )
     format ="%a, %b %d"
 
-    fridays = [(friday.strftime(format),(friday + datetime.timedelta(2)).strftime(format))]
+    dates = [(day_date.strftime(format),(day_date + datetime.timedelta((day_nrs[day_in]-day_nrs[day_out]) % 7)).strftime(format))]
 
     for _ in range((4*months)-1):
-        friday += datetime.timedelta(7)
-        fridays.append((friday.strftime(format),(friday+datetime.timedelta(2)).strftime(format)))
-    return fridays
+        day_date += datetime.timedelta(7)
+        dates.append((day_date.strftime(format),(day_date+datetime.timedelta((day_nrs[day_in]-day_nrs[day_out]) % 7)).strftime(format)))
+    return dates
 
-def fetch_prices(driver, fridays,currency_mask="€"):
+def get_currency(driver):
+    currency_text = driver.find_element(By.XPATH,"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[4]/c-wiz/footer/div[1]/c-wiz/button[3]/span/span[2]").text
+    currencies = {"GBP":"£","EUR":"€","CHF":"CHF&nbsp;"}
+    logging.info(f"Prices displayed in {currency_text}")
+    return currencies[currency_text]
+
+def fetch_prices(driver, fridays):
     # TODO: write this as a method of a class
     prices = {}
     logging.info("Getting prices:")
@@ -101,6 +110,8 @@ def fetch_prices(driver, fridays,currency_mask="€"):
         except TimeoutException:
             prices[fr] = None
             continue
+        
+        currency_mask = get_currency(driver)
 
         if len(li_children):
             fr_prices = []
@@ -119,16 +130,20 @@ def fetch_prices(driver, fridays,currency_mask="€"):
 @click.command()
 @click.option("-i","--initiary", default=("ZRH","FLR"),nargs=2,show_default=True,type=(str,str),help="Departure and Destination.")
 @click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for")
+@click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight")
+@click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. Always picks ")
 @click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO")
-def main(initiary,months,debug):
+def main(initiary,months,times,days,debug):
     departure,destination = initiary
+    t1,t2 = times
+    day_out, day_in = days
     if debug:
         logging.basicConfig(level=logging.DEBUG)
     else:
         logging.basicConfig(level=logging.INFO)
     
 
-    logging.info(f"Checking weekly flight prices from {departure} to {destination} for the next {months} months.")
+    logging.info(f"Checking weekly flight prices from {departure} to {destination} for {day_out} after {t1}:00 till {day_in} after {t2}:00 for the next {months} months.")
 
     # set up. handle deprecation at some point...
     driver = webdriver.Chrome("/Applications/chromedriver")
@@ -145,15 +160,17 @@ def main(initiary,months,debug):
         raise
 
     try:
-        set_filters(driver)
+        set_filters(driver, time_out = t1, time_in = t2)
     except:
         logging.error("Encountered error while setting filters.")
         raise
 
-    fridays = get_fridays(months=months)
+    flight_dates = get_flight_dates(day_out=day_out, day_in=day_in, months=months)
+
+    currencies = {}
 
     try:
-        prices = fetch_prices(driver,fridays, "€")
+        prices = fetch_prices(driver,flight_dates, "€")
     except:
         logging.error("Encountered Error while fetching prices.")
         raise
