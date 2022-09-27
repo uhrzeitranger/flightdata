@@ -82,7 +82,6 @@ def get_flight_dates(day_out,day_in,months=6):
 def get_currency(driver):
     currency_text = driver.find_element(By.XPATH,"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[4]/c-wiz/footer/div[1]/c-wiz/button[3]/span/span[2]").text
     currencies = {"GBP":"£","EUR":"€","CHF":"CHF&nbsp;"}
-    logging.info(f"Prices displayed in {currency_text}")
     return currencies[currency_text]
 
 def fetch_prices(driver, fridays):
@@ -167,10 +166,8 @@ def main(initiary,months,times,days,debug):
 
     flight_dates = get_flight_dates(day_out=day_out, day_in=day_in, months=months)
 
-    currencies = {}
-
     try:
-        prices = fetch_prices(driver,flight_dates, "€")
+        prices = fetch_prices(driver,flight_dates)
     except:
         logging.error("Encountered Error while fetching prices.")
         raise
