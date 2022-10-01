@@ -69,20 +69,32 @@ def get_flight_dates(day_out,day_in,months=6):
     days = ["Mo","Tu","We","Th","Fr","Sa","Su"]
     nrs = [0,1,2,3,4,5,6]
     day_nrs = dict(zip(days,nrs))
+    day_in, week_add = parse_inbound_day(day_in)
+    days_delta = ((day_nrs[day_in]-day_nrs[day_out]) % 7) + 7*week_add
     day_date = datetime.date.today() + datetime.timedelta( (day_nrs[day_out]-datetime.date.today().weekday()) % 7 )
     format ="%a, %b %d"
 
-    dates = [(day_date.strftime(format),(day_date + datetime.timedelta((day_nrs[day_in]-day_nrs[day_out]) % 7)).strftime(format))]
+    dates = [(day_date.strftime(format),(day_date + datetime.timedelta(days_delta)).strftime(format))]
 
     for _ in range((4*months)-1):
         day_date += datetime.timedelta(7)
-        dates.append((day_date.strftime(format),(day_date+datetime.timedelta((day_nrs[day_in]-day_nrs[day_out]) % 7)).strftime(format)))
+        dates.append((day_date.strftime(format),(day_date+datetime.timedelta(days_delta)).strftime(format)))
     return dates
 
 def get_currency(driver):
     currency_text = driver.find_element(By.XPATH,"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[4]/c-wiz/footer/div[1]/c-wiz/button[3]/span/span[2]").text
     currencies = {"GBP":"£","EUR":"€","CHF":"CHF&nbsp;"}
     return currencies[currency_text]
+
+def parse_inbound_day(t):
+    """Auxiliary function that allows to specify day_in as 'Fr+1' for Friday the following week"""
+    try:
+        loc = t.find("+")
+        r = int(t[loc+1:])
+        t = t[:loc]
+    except ValueError:
+        r = 0
+    return t,r
 
 def fetch_prices(driver, fridays):
     # TODO: write this as a method of a class
@@ -130,7 +142,7 @@ def fetch_prices(driver, fridays):
 @click.option("-i","--initiary", default=("ZRH","FLR"),nargs=2,show_default=True,type=(str,str),help="Departure and Destination.")
 @click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for")
 @click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight")
-@click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. Always picks ")
+@click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'")
 @click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO")
 def main(initiary,months,times,days,debug):
     departure,destination = initiary
