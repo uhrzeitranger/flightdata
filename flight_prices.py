@@ -5,13 +5,16 @@ import logging
 import click
 from pprint import pprint
 from tqdm import tqdm
+
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
+from webdriver_manager.chrome import ChromeDriverManager
 
 def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     # TODO: write this as a method of a class
@@ -158,7 +161,7 @@ def main(initiary,months,times,days,debug):
     logging.info(f"Checking weekly flight prices from {departure} to {destination} for {day_out} after {t1}:00 till {day_in} after {t2}:00 for the next {months} months.")
 
     # set up. handle deprecation at some point...
-    driver = webdriver.Chrome("/Applications/chromedriver")
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
 
     driver.get("https://www.google.com/travel/flights")
 
