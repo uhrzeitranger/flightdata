@@ -83,6 +83,7 @@ def get_flight_dates(day_out,day_in,months=6):
 
 def get_currency(driver):
     currency_text = driver.find_element(By.XPATH,"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[4]/c-wiz/footer/div[1]/c-wiz/button[3]/span/span[2]").text
+    logging.debug(f"I found this currency {currency_text}")
     currencies = {"GBP":"£","EUR":"€","CHF":"CHF"}
     return currencies[currency_text]
 
@@ -114,12 +115,14 @@ def fetch_prices(driver, fridays):
         time.sleep(0.5)
         done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
         done_button.click()
-        time.sleep(0.5)
+        time.sleep(1.5)
         
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
+            logging.debug("I am getting some prices")
         except TimeoutException:
             prices[fr] = None
+            logging.debug("I dont get any prices")
             continue
         
         currency_mask = get_currency(driver)
@@ -130,6 +133,7 @@ def fetch_prices(driver, fridays):
                 try:
                     price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
                     fr_prices.append(int(price))
+                    logging.debug(fr_prices)
                 except:
                     continue
             itinerary = f"{fr} -> {su}"
