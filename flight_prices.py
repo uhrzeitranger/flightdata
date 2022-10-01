@@ -155,7 +155,7 @@ def fetch_prices(driver, fridays):
 
 @click.command()
 @click.option("-i","--initiary", default=("ZRH","FLR"),nargs=2,show_default=True,type=(str,str),help="Departure and Destination.")
-@click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
+@click.option("-m","--months",default=3,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
 @click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight.")
 @click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'.")
 @click.option("-s","--stops", default=-1, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
