@@ -115,7 +115,7 @@ def fetch_prices(driver, fridays):
         done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
         done_button.click()
         time.sleep(0.5)
-        # if there are no li - i.e. no flights for the times and filters, the WebDriverWait will throw an exception. TODO: wrap into according except.
+        
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
@@ -132,9 +132,10 @@ def fetch_prices(driver, fridays):
                     fr_prices.append(int(price))
                 except:
                     continue
-            prices[fr] = min(fr_prices)
+            itinerary = f"{fr} -> {su}"
+            prices[itinerary] = min(fr_prices)
         else:
-            prices[fr] = None
+            prices[itinerary] = None
     logging.info("Prices fetched successfully.")
     return prices
 
