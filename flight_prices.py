@@ -60,7 +60,7 @@ def set_filters(driver, time_out, time_in, layovers):
     outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
-    logging.debug("Set outbund time")
+    logging.debug("Set outbound time")
     time.sleep(1)
 
 
@@ -106,21 +106,21 @@ def parse_inbound_day(t):
         r = 0
     return t,r
 
-def fetch_prices(driver, fridays):
+def fetch_prices(driver, dates):
     # TODO: write this as a method of a class
     prices = {}
     logging.info("Getting prices:")
-    for fr, su in tqdm(fridays):
-        logging.debug(f"Getting prices for {fr}")
+    for date_out, date_in in tqdm(dates):
+        logging.debug(f"Getting prices for {date_out}")
         time.sleep(1)
         from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
         from_time.click()
         time.sleep(1)
         from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+        from_time_w_calendar.send_keys(date_out, Keys.TAB) # FIXME: this throws an element not interactible Exception!
         time.sleep(0.5)
         to_time = driver.switch_to.active_element
-        to_time.send_keys(su)
+        to_time.send_keys(date_in)
         time.sleep(0.5)
         done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
         done_button.click()
@@ -129,22 +129,22 @@ def fetch_prices(driver, fridays):
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
-            prices[fr] = None
+            prices[date_out] = None
             continue
         
         currency_mask = get_currency(driver)
 
         if len(li_children):
-            fr_prices = []
+            date_out_prices = []
             for li in li_children:
                 try:
                     logging.debug(li.text)
                     price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
-                    fr_prices.append(int(price))
+                    date_out_prices.append(int(price))
                 except:
                     continue
-            itinerary = f"{fr} -> {su}"
-            prices[itinerary] = min(fr_prices)
+            itinerary = f"{date_out} -> {date_in}"
+            prices[itinerary] = min(date_out_prices)
         else:
             prices[itinerary] = None
     logging.info("Prices fetched successfully.")
