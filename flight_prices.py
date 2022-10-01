@@ -144,11 +144,8 @@ def fetch_prices(driver, fridays):
                     continue
             best_flight = date_out_prices.index(min(date_out_prices))
             best_flight_text = date_out_texts[best_flight]
-            print(best_flight_text) # TODO:
             airports = re.search(r'min\n(.*?)\n.*',best_flight_text).group(1)
-            print(airports)
             stops = re.search(r'\n(.*?stop)\n',best_flight_text).group(1)
-            print(stops)
             itinerary = f"{date_out} -> {date_in} || {airports} || {stops}"
             prices[itinerary] = min(date_out_prices)
         else:
