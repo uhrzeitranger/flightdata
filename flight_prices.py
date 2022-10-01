@@ -99,25 +99,29 @@ def parse_inbound_day(t):
         r = 0
     return t,r
 
+def enter_dates(driver,fr,su):
+    logging.debug(f"Getting prices for {fr}")
+    time.sleep(1)
+    from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
+    from_time.click()
+    time.sleep(1)
+    from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
+    from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+    time.sleep(0.5)
+    to_time = driver.switch_to.active_element
+    to_time.send_keys(su)
+    time.sleep(0.5)
+    done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
+    done_button.click()
+    time.sleep(0.5)
+
 def fetch_prices(driver, fridays):
     # TODO: write this as a method of a class
     prices = {}
     logging.info("Getting prices:")
     for fr, su in tqdm(fridays):
-        logging.debug(f"Getting prices for {fr}")
-        time.sleep(1)
-        from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
-        from_time.click()
-        time.sleep(1)
-        from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
-        time.sleep(0.5)
-        to_time = driver.switch_to.active_element
-        to_time.send_keys(su)
-        time.sleep(0.5)
-        done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
-        done_button.click()
-        time.sleep(0.5)
+        
+        enter_dates(driver,fr,su)
         
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
@@ -129,12 +133,14 @@ def fetch_prices(driver, fridays):
 
         if len(li_children):
             fr_prices = []
+            fr_texts = []
             for li in li_children:
                 try:
                     price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
                     fr_prices.append(int(price))
+                    fr_texts.append(li.text)
                 except:
-                    continue
+                    fr_prices.append("Error")
             itinerary = f"{fr} -> {su}"
             prices[itinerary] = min(fr_prices)
         else:
