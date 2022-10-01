@@ -48,9 +48,9 @@ def set_filters(driver, time_out, time_in, layovers):
         logging.debug(f"Set maximum layovers to {layovers}.")
 
     # outbound 
-    WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button"))).click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button"))).click()
     # departure time
-    outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
+    outbound_dep_time_drag = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")))
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set outbound time")
@@ -143,8 +143,12 @@ def fetch_prices(driver, fridays):
                 except:
                     continue
             best_flight = date_out_prices.index(min(date_out_prices))
-            airports = re.search('min\n(.*?)\n.*',date_out_texts[best_flight]).group(1)
-            stops = re.search('\n(.*?stop)\n',date_out_texts[best_flight]).group(1)
+            best_flight_text = date_out_texts[best_flight]
+            print(best_flight_text) # TODO:
+            airports = re.search(r'min\n(.*?)\n.*',best_flight_text).group(1)
+            print(airports)
+            stops = re.search(r'\n(.*?stop)\n',best_flight_text).group(1)
+            print(stops)
             itinerary = f"{date_out} -> {date_in} || {airports} || {stops}"
             prices[itinerary] = min(date_out_prices)
         else:
@@ -157,7 +161,7 @@ def fetch_prices(driver, fridays):
 @click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
 @click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight.")
 @click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'.")
-@click.option("-s","--stops", default=0, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
+@click.option("-s","--stops", default=-1, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
 @click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO.")
 def main(initiary,months,times,days,stops,debug):
     departure,destination = initiary
