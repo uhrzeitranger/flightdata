@@ -1,4 +1,3 @@
-from pickle import FALSE
 import time
 import datetime
 import re
@@ -44,12 +43,7 @@ def set_filters(driver, time_out, time_in, layovers):
     # stops
     if (layovers > -1) and (layovers < 3):
         WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[1]/span/button"))).click()
-        if layovers == 0:
-            WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[2]/div/input"))).click()
-        elif layovers == 1:
-            WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[3]/div/input"))).click()
-        else:
-            WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[4]/div/input"))).click()
+        WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, f"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[{layovers+2}]/div/input"))).click()
     
     logging.debug(f"Set maximum layovers to {layovers}.")
     time.sleep(1)
@@ -155,7 +149,7 @@ def fetch_prices(driver, dates):
 @click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
 @click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight.")
 @click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'.")
-@click.option("-s","--stops", default=-1, show_default=FALSE, type=int, help="Maximum number of layovers. 0 for non-stop only.") # added click option for selection of max. number of stops
+@click.option("-s","--stops", default=-1, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
 @click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO.")
 def main(initiary,months,times,days,stops,debug):
     departure,destination = initiary
