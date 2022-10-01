@@ -39,12 +39,13 @@ def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[2]/div/button").click()
 
 
-def set_filters(driver, time_out, time_in):
+def set_filters(driver, time_out, time_in, layovers):
     # stops
-    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[1]/span/button"))).click()
-    non_stop_option = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[2]/div/input")))
-    non_stop_option.click()
-    logging.debug("Set nonstop.")
+    if (layovers > -1) and (layovers < 3):
+        WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[1]/span/button"))).click()
+        WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, f"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[{layovers+2}]/div/input"))).click()
+    
+    logging.debug(f"Set maximum layovers to {layovers}.")
     time.sleep(1)
 
     # outbound 
@@ -53,7 +54,7 @@ def set_filters(driver, time_out, time_in):
     outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
-    logging.debug("Set outbund time")
+    logging.debug("Set outbound time")
     time.sleep(1)
 
 
@@ -99,21 +100,21 @@ def parse_inbound_day(t):
         r = 0
     return t,r
 
-def fetch_prices(driver, fridays):
+def fetch_prices(driver, dates):
     # TODO: write this as a method of a class
     prices = {}
     logging.info("Getting prices:")
-    for fr, su in tqdm(fridays):
-        logging.debug(f"Getting prices for {fr}")
+    for date_out, date_in in tqdm(dates):
+        logging.debug(f"Getting prices for {date_out}")
         time.sleep(1)
         from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
         from_time.click()
         time.sleep(1)
         from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+        from_time_w_calendar.send_keys(date_out, Keys.TAB) # FIXME: this throws an element not interactible Exception!
         time.sleep(0.5)
         to_time = driver.switch_to.active_element
-        to_time.send_keys(su)
+        to_time.send_keys(date_in)
         time.sleep(0.5)
         done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
         done_button.click()
@@ -122,21 +123,22 @@ def fetch_prices(driver, fridays):
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
-            prices[fr] = None
+            prices[date_out] = None
             continue
         
         currency_mask = get_currency(driver)
 
         if len(li_children):
-            fr_prices = []
+            date_out_prices = []
             for li in li_children:
                 try:
+                    logging.debug(li.text)
                     price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
-                    fr_prices.append(int(price))
+                    date_out_prices.append(int(price))
                 except:
                     continue
-            itinerary = f"{fr} -> {su}"
-            prices[itinerary] = min(fr_prices)
+            itinerary = f"{date_out} -> {date_in}"
+            prices[itinerary] = min(date_out_prices)
         else:
             prices[itinerary] = None
     logging.info("Prices fetched successfully.")
@@ -144,11 +146,12 @@ def fetch_prices(driver, fridays):
 
 @click.command()
 @click.option("-i","--initiary", default=("ZRH","FLR"),nargs=2,show_default=True,type=(str,str),help="Departure and Destination.")
-@click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for")
-@click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight")
-@click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'")
-@click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO")
-def main(initiary,months,times,days,debug):
+@click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
+@click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight.")
+@click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'.")
+@click.option("-s","--stops", default=-1, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
+@click.option("--debug",is_flag=True,default=False,show_default=True,help="Whether logger is set to DEBUG or INFO.")
+def main(initiary,months,times,days,stops,debug):
     departure,destination = initiary
     t1,t2 = times
     day_out, day_in = days
@@ -175,7 +178,7 @@ def main(initiary,months,times,days,debug):
         raise
 
     try:
-        set_filters(driver, time_out = t1, time_in = t2)
+        set_filters(driver, time_out = t1, time_in = t2, layovers=stops)
     except:
         logging.error("Encountered error while setting filters.")
         raise
