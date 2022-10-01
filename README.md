@@ -6,8 +6,7 @@ Simple CLI tool to scrape flight prices for a given route from Google Flights th
 - selenium
 - click
 - tqdm
-
-As of now also requires Chrome webdriver to run. However, this will probably be changed soon (see here: https://stackoverflow.com/questions/64717302/deprecationwarning-executable-path-has-been-deprecated-selenium-python).
+- webdriver-manager
 
 ## Contents
 ### flight_prices.py
