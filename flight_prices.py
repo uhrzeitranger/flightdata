@@ -47,11 +47,10 @@ def set_filters(driver, time_out, time_in, layovers):
     
     logging.debug(f"Set maximum layovers to {layovers}.")
     time.sleep(1)
-
-    # outbound 
-    driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button").click()
+    # outbound
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button"))).click()
     # departure time
-    outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
+    outbound_dep_time_drag = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")))
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set outbound time")
