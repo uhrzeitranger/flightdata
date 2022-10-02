@@ -202,7 +202,9 @@ def main(initiary,months,times,days,stops,debug):
         raise
     
     # print to terminal or return?
+    print("\nResults\n-------------------------")
     pprint(prices, width=30, sort_dicts=False)
+    print("-------------------------")
 
     driver.close()
 
