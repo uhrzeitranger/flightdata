@@ -38,7 +38,6 @@ def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     # press search
     driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[2]/div/button").click()
 
-
 def set_filters(driver, time_out, time_in, layovers):
     # stops
     if (layovers > -1) and (layovers < 3):
