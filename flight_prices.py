@@ -18,25 +18,22 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 def navigate_to_main_search_mask(driver, departure="ZRH",destination="FLR"):
     # TODO: write this as a method of a class
-    input_from = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[1]/div/div/div[1]/div/div/input")
-    input_from.click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[1]/div/div/div[1]/div/div/input"))).click() # opens departure drop-down
     input_w_dropdown_from = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[6]/div[2]/div[2]/div[1]/div/input")))
-    time.sleep(0.5)
     input_w_dropdown_from.clear()
     input_w_dropdown_from.send_keys(departure)
-    time.sleep(0.8) # load js
+    time.sleep(0.5) # load js
     input_w_dropdown_from.send_keys(Keys.RETURN)
 
     # entering destination
-    input_to = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[4]/div/div/div[1]/div/div/input")
-    input_to.click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[4]/div/div/div[1]/div/div/input"))).click() # opens destination drop-down
     input_w_dropdown_to = WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[1]/div/div[2]/div[1]/div[6]/div[2]/div[2]/div[1]/div/input")))
     input_w_dropdown_to.send_keys(destination)
-    time.sleep(0.8) # load js
+    time.sleep(0.5) # load js
     input_w_dropdown_to.send_keys(Keys.RETURN)
 
     # press search
-    driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[2]/div/button").click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div[1]/div[2]/div/button"))).click()
 
 def set_filters(driver, time_out, time_in, layovers):
     # stops
@@ -45,7 +42,7 @@ def set_filters(driver, time_out, time_in, layovers):
         WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, f"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[{layovers+2}]/div/input"))).click()
     
     logging.debug(f"Set maximum layovers to {layovers}.")
-    time.sleep(1)
+    
     # outbound
     WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button"))).click()
     # departure time
@@ -53,17 +50,15 @@ def set_filters(driver, time_out, time_in, layovers):
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set outbound time")
-    time.sleep(1)
-
 
     # inbound
-    driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[1]/div/div/span/button[2]").click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[1]/div/div/span/button[2]"))).click()
     # departure time
-    inbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[3]/span/div/div[2]/div/div[2]/div/div/input[1]")
+    inbound_dep_time_drag = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[3]/span/div/div[2]/div/div[2]/div/div/input[1]")))
     for _ in range(time_in):
         inbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set inbound time")
-    time.sleep(1)
+    time.sleep(0.5)
     inbound_dep_time_drag.send_keys(Keys.ESCAPE)
 
 
@@ -104,19 +99,14 @@ def fetch_prices(driver, dates):
     logging.info("Getting prices:")
     for date_out, date_in in tqdm(dates):
         logging.debug(f"Getting prices for {date_out}")
-        time.sleep(1)
-        from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
-        from_time.click()
-        time.sleep(1)
+        WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]"))).click() # clicks departure date field
+        time.sleep(0.5)
         from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(date_out, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+        from_time_w_calendar.send_keys(date_out, Keys.TAB)
         time.sleep(0.5)
         to_time = driver.switch_to.active_element
         to_time.send_keys(date_in)
-        time.sleep(0.5)
-        done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
-        done_button.click()
-        time.sleep(0.5)
+        WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button"))).click() # clicks done button
         
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
