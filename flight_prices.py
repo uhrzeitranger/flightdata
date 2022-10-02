@@ -1,3 +1,4 @@
+from pickle import bytes_types
 import time
 import datetime
 import re
@@ -126,30 +127,30 @@ def fetch_prices(driver, fridays):
         try:
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
-            prices[date_out] = None
+            prices[date_out] = "Can't find flights."
             continue
         
         currency_mask = get_currency(driver)
 
-        if len(li_children):
-            date_out_prices = []
-            date_out_texts = []
-            for li in li_children:
-                try:
-                    logging.debug(f"Text: Selection {li.text}")
-                    price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
-                    date_out_prices.append(int(price))
-                    date_out_texts.append(li.text)
-                except:
-                    continue
-            best_flight = date_out_prices.index(min(date_out_prices))
-            best_flight_text = date_out_texts[best_flight]
-            airports = re.search(r'min\n(.*?)\n.*',best_flight_text).group(1)
-            stops = re.search(r'\n(.*?stop)\n',best_flight_text).group(1)
-            itinerary = f"{date_out} -> {date_in} || {airports} || {stops}"
-            prices[itinerary] = min(date_out_prices)
-        else:
-            prices[itinerary] = None
+        date_out_prices = []
+        date_out_texts = []
+
+        for li in li_children:
+            try:
+                logging.debug(f"Text: Selection {li.text}")
+                price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
+                date_out_prices.append(int(price))
+                date_out_texts.append(li.text)
+            except:
+                continue
+
+        best_flight = date_out_prices.index(min(date_out_prices))
+        best_flight_text = date_out_texts[best_flight]
+        airports = re.search(r'\n([A-Z]{3}.[A-Z]{3})\n',best_flight_text).group(1)
+        stops = re.search(r'\n(.*?stop.*?)\n',best_flight_text).group(1)
+        itinerary = f"{date_out} -> {date_in} || {airports} || {stops}"
+        prices[itinerary] = min(date_out_prices)
+
     logging.info("Prices fetched successfully.")
     return prices
 
