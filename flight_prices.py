@@ -125,7 +125,7 @@ def fetch_prices(driver, fridays):
         enter_dates(driver,date_out,date_in)
         
         try:
-            time.sleep(1)
+            time.sleep(0.8)
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
             prices[date_out] = "Can't find flights."
