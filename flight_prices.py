@@ -143,6 +143,7 @@ def fetch_prices(driver, fridays):
                 date_out_prices.append(int(price))
                 date_out_texts.append(li.text)
             except:
+                logging.info(f"Error reading flight info for {date_out}->{date_in}. Proceeding with other options.")
                 continue
 
         best_flight = date_out_prices.index(min(date_out_prices))
