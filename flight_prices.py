@@ -100,17 +100,17 @@ def parse_inbound_day(t):
         r = 0
     return t,r
 
-def enter_dates(driver,fr,su):
-    logging.debug(f"Getting prices for {fr}")
+def enter_dates(driver,outbound,inbound):
+    logging.debug(f"Getting prices for {outbound}")
     time.sleep(1)
     from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
     from_time.click()
     time.sleep(1)
     from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-    from_time_w_calendar.send_keys(fr, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+    from_time_w_calendar.send_keys(outbound, Keys.TAB) # FIXME: this throws an element not interactible Exception!
     time.sleep(0.5)
     to_time = driver.switch_to.active_element
-    to_time.send_keys(su)
+    to_time.send_keys(inbound)
     time.sleep(0.5)
     done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
     done_button.click()
