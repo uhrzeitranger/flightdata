@@ -45,13 +45,12 @@ def set_filters(driver, time_out, time_in, layovers):
         WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[1]/span/button"))).click()
         WebDriverWait(driver,5).until(EC.presence_of_element_located((By.XPATH, f"/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div[{layovers+2}]/div/input"))).click()
     
-    logging.debug(f"Set maximum layovers to {layovers}.")
-    time.sleep(1)
+        logging.debug(f"Set maximum layovers to {layovers}.")
 
     # outbound 
-    driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button").click()
+    WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div/div[2]/div[1]/div/div[5]/span/button"))).click()
     # departure time
-    outbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")
+    outbound_dep_time_drag = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[2]/span/div/div[2]/div/div[2]/div/div/input[1]")))
     for _ in range(time_out):
         outbound_dep_time_drag.send_keys(Keys.ARROW_RIGHT)
     logging.debug("Set outbound time")
@@ -59,7 +58,7 @@ def set_filters(driver, time_out, time_in, layovers):
 
 
     # inbound
-    driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[1]/div/div/span/button[2]").click()
+    WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[1]/div/div/span/button[2]"))).click()
     # departure time
     inbound_dep_time_drag = driver.find_element(By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[4]/div/div[2]/div[3]/div/div[1]/section/div[2]/div[1]/div/div/div/div[3]/span/div/div[2]/div/div[2]/div/div/input[1]")
     for _ in range(time_in):
@@ -100,53 +99,65 @@ def parse_inbound_day(t):
         r = 0
     return t,r
 
-def fetch_prices(driver, dates):
+def enter_dates(driver,outbound,inbound):
+    logging.debug(f"Getting prices for {outbound}")
+    time.sleep(1)
+    from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
+    from_time.click()
+    time.sleep(1)
+    from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
+    from_time_w_calendar.send_keys(outbound, Keys.TAB) # FIXME: this throws an element not interactible Exception!
+    time.sleep(0.5)
+    to_time = driver.switch_to.active_element
+    to_time.send_keys(inbound)
+    time.sleep(0.5)
+    done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
+    done_button.click()
+    time.sleep(0.5)
+
+def fetch_prices(driver, fridays):
     # TODO: write this as a method of a class
     prices = {}
     logging.info("Getting prices:")
-    for date_out, date_in in tqdm(dates):
-        logging.debug(f"Getting prices for {date_out}")
-        time.sleep(1)
-        from_time = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[1]/div/div/div[1]/div/div[1]/div/div[1]")))
-        from_time.click()
-        time.sleep(1)
-        from_time_w_calendar = WebDriverWait(driver,3).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[2]/div[1]/div[1]/div[1]/div/input")))
-        from_time_w_calendar.send_keys(date_out, Keys.TAB) # FIXME: this throws an element not interactible Exception!
-        time.sleep(0.5)
-        to_time = driver.switch_to.active_element
-        to_time.send_keys(date_in)
-        time.sleep(0.5)
-        done_button = WebDriverWait(driver,2).until(EC.presence_of_element_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[1]/div/div[2]/div[2]/div/div/div[2]/div/div[3]/div[3]/div/button")))
-        done_button.click()
-        time.sleep(0.5)
+    for date_out, date_in in tqdm(fridays):
+        
+        enter_dates(driver,date_out,date_in)
         
         try:
+            time.sleep(0.8)
             li_children = WebDriverWait(driver,2).until(EC.presence_of_all_elements_located((By.XPATH, "/html/body/c-wiz[2]/div/div[2]/c-wiz/div[1]/c-wiz/div[2]/div[2]/div[3]/ul/li")))
         except TimeoutException:
-            prices[date_out] = None
+            prices[date_out] = "Can't find flights."
             continue
         
         currency_mask = get_currency(driver)
 
-        if len(li_children):
-            date_out_prices = []
-            for li in li_children:
-                try:
-                    logging.debug(li.text)
-                    price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
-                    date_out_prices.append(int(price))
-                except:
-                    continue
-            itinerary = f"{date_out} -> {date_in}"
-            prices[itinerary] = min(date_out_prices)
-        else:
-            prices[itinerary] = None
+        date_out_prices = []
+        date_out_texts = []
+
+        for li in li_children:
+            try:
+                logging.debug(f"Text: Selection {li.text}")
+                price = re.search(rf'.*?{currency_mask}(.*?)\n.*', li.text).group(1).replace(",","")
+                date_out_prices.append(int(price))
+                date_out_texts.append(li.text)
+            except:
+                logging.info(f"Error reading flight info for {date_out}->{date_in}. Proceeding with other options.")
+                continue
+
+        best_flight = date_out_prices.index(min(date_out_prices))
+        best_flight_text = date_out_texts[best_flight]
+        airports = re.search(r'\n([A-Z]{3}.[A-Z]{3})\n',best_flight_text).group(1)
+        stops = re.search(r'\n(.*?stop.*?)\n',best_flight_text).group(1)
+        itinerary = f"{date_out} -> {date_in} || {airports} || {stops}"
+        prices[itinerary] = min(date_out_prices)
+
     logging.info("Prices fetched successfully.")
     return prices
 
 @click.command()
 @click.option("-i","--initiary", default=("ZRH","FLR"),nargs=2,show_default=True,type=(str,str),help="Departure and Destination.")
-@click.option("-m","--months",default=6,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
+@click.option("-m","--months",default=3,type=int,show_default=True,help="Number of months into the future to scrape prices for.")
 @click.option("-t","--times", default=(16,17),nargs=2, show_default=True, type=(int,int), help="Departure times for outbound and inbound flight.")
 @click.option("-d","--days", default=("Fr","Su"),nargs=2, show_default=True, type=(str,str), help="Weekdays to select. For following week(s) do e.g. 'XX+1'.")
 @click.option("-s","--stops", default=-1, show_default=False, type=int, help="Maximum number of layovers. 0 for non-stop only.")
@@ -192,7 +203,9 @@ def main(initiary,months,times,days,stops,debug):
         raise
     
     # print to terminal or return?
+    print("\nResults\n-------------------------")
     pprint(prices, width=30, sort_dicts=False)
+    print("-------------------------")
 
     driver.close()
 
